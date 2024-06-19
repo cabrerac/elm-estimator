@@ -1,3 +1,4 @@
+from data_manager import mongo
 from cfn_tools import load_yaml
 import pika
 
@@ -22,3 +23,25 @@ def publish_message(host, msg, queue):
             delivery_mode=2,
         ))
     connection.close()
+
+
+# gets topic for next step in a learning process
+def get_next_topic(task_id):
+    task = mongo.retrieve_record('xlm', 'tasks', {'_id': task_id})
+    print('tasks: ' + str(task))
+    steps = task['steps']
+    sorted_keys = sorted(steps.keys())
+    if len(sorted_keys) > 0:
+        step = sorted_keys[0]
+        next_topic = steps[sorted_keys[0]].replace('_', '.')
+    else:
+        step = -1
+        next_topic = 'learning.finish'
+    return step, next_topic
+
+
+# updates the steps of a learning process
+def update_steps_task(task_id, step):
+    task = mongo.retrieve_record('xlm', 'tasks', {'_id': task_id})
+    del task['steps'][step]
+    mongo.update_record('xlm', 'tasks', {'_id': task_id}, {'$set': {'steps': task['steps']}})

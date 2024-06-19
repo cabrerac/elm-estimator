@@ -1,5 +1,5 @@
 rabbitmq_url: localhost
-username: guest
-password: guest
+username: admin
+password: admin
 port: 5671
 virtual_host: /

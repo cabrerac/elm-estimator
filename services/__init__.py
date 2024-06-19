@@ -28,7 +28,10 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    from . import estimator
-    app.register_blueprint(estimator.bp)
+    from . import learner
+    app.register_blueprint(learner.bp)
+
+    from .linear_model import slope_estimator
+    from .linear_model import intercept_estimator
 
     return app

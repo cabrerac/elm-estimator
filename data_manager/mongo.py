@@ -16,6 +16,30 @@ def store(db_name, collection_name, record):
         collection = db[collection_name]
         record_id = collection.insert_one(record).inserted_id
     except Exception as ex:
-        logger.info("Error storing the task: " + str(ex) + "...")
+        logger.info("Error storing the record: " + str(ex) + "...")
+        record_id = None
+    return record_id
+
+
+def retrieve_record(db_name, collection_name, query):
+    try:
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        db = client[db_name]
+        collection = db[collection_name]
+        record = collection.find_one(query)
+    except Exception as ex:
+        logger.info("Error retrieving the record: " + str(ex) + "...")
+        record = None
+    return record
+
+
+def update_record(db_name, collection_name, query, update):
+    try:
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        db = client[db_name]
+        collection = db[collection_name]
+        record_id = collection.update(query, update)
+    except Exception as ex:
+        logger.info("Error updating the record: " + str(ex) + "...")
         record_id = None
     return record_id
