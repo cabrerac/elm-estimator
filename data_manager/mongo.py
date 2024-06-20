@@ -38,7 +38,7 @@ def update_record(db_name, collection_name, query, update):
         client = MongoClient(uri, server_api=ServerApi('1'))
         db = client[db_name]
         collection = db[collection_name]
-        record_id = collection.update(query, update)
+        record_id = collection.update_one(query, update)
     except Exception as ex:
         logger.info("Error updating the record: " + str(ex) + "...")
         record_id = None

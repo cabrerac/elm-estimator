@@ -12,10 +12,12 @@ def callback(ch, method, properties, body):
     _estimate_slope(task_id)
     util.update_steps_task(task_id, step)
     prod = producer.Producer()
+    print("Next topic slope: " + next_topic)
     prod.publish(next_topic, message)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
-consumer_thread = consumer.Consumer('estimate.slope', callback)
+consumer_thread = consumer.Consumer('estimate_slope', callback)
 consumer_thread.start()
 
 

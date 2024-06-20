@@ -9,15 +9,14 @@ class Producer:
         rabbit_parameters = pika.ConnectionParameters(host='localhost')
         self.connection = pika.BlockingConnection(rabbit_parameters)
         self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange='messages', exchange_type='topic', durable=False)
-        self.channel.confirm_delivery()
 
-    def publish(self, routing_key, body):
+    def publish(self, queue_name, body):
         try:
-            body_json = json.dumps(body, indent=4)
-            self.channel.basic_publish(exchange='messages', routing_key=routing_key, body=body_json)
+            self.channel.queue_declare(queue=queue_name, durable=False)
+            body_json = json.dumps(body, indent=3)
+            self.channel.basic_publish(exchange='', routing_key=queue_name, body=body_json, properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent))
             self.connection.close()
-            print(" [x] Sent to " + routing_key + " Message: " + str(body_json))
+            print(" [x] Sent to queue: " + queue_name + " Message: " + str(body))
             return True
         except Exception as ex:
             print(str(ex))

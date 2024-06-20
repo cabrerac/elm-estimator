@@ -10,9 +10,10 @@ def callback(ch, method, properties, body):
     message = json.loads(body)
     task_id = message['task_id']
     print("learning process finished for task: " + task_id)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
-consumer_thread = consumer.Consumer('learning.finish', callback)
+consumer_thread = consumer.Consumer('learning_finish', callback)
 consumer_thread.start()
 
 bp = Blueprint('learner', __name__, url_prefix='')
@@ -28,7 +29,8 @@ def learn():
     method = data['method']
     if model == 'linear':
         if method == 'least_squares':
-            next_topic = util.get_next_topic(task_id)
+            step, next_topic = util.get_next_topic(str(task_id))
+            util.update_steps_task(str(task_id), step)
             prod = producer.Producer()
             prod.publish(next_topic, message)
     res = {'task_id': str(task_id)}
