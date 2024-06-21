@@ -10,7 +10,7 @@ class Consumer(threading.Thread):
         self.connection = pika.BlockingConnection(rabbit_parameters)
         self.channel = self.connection.channel()
         self.queue_name = queue_name
-        self.channel.queue_declare(queue=self.queue_name, durable=False)
+        self.channel.queue_declare(queue=self.queue_name, durable=True)
         threading.Thread(target=self.channel.basic_consume(queue=self.queue_name, on_message_callback=callback), daemon=True)
     
     def run(self):
