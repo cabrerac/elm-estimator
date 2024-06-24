@@ -1,14 +1,5 @@
 from data_manager import mongo
-from cfn_tools import load_yaml
-import pika
 from bson import ObjectId
-
-
-# reads credentials
-def read_rabbit_credentials(file):
-    with open(file, 'r') as stream:
-        credentials = load_yaml(stream)
-        return credentials
 
 
 # gets topic for next step in a learning process

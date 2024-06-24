@@ -1,7 +1,10 @@
 import json
+from scipy.stats import linregress
 from clients import producer
 from clients import consumer
 from util import util
+from data_manager import mongo
+from bson import ObjectId
 
 
 def callback(ch, method, properties, body):
@@ -21,3 +24,11 @@ consumer_thread.start()
 
 def _estimate_intercept(task_id):
     print('estimating intercept for task: ' + task_id)
+    object_id = ObjectId(task_id)
+    task = mongo.retrieve_record('xlm', 'tasks', {'_id': object_id})
+    metadata = task['metadata']
+    x = task['data'][metadata['independent_variable']]
+    y = task['data'][metadata['dependent_variable']]
+    intercept = linregress(x, y).intercept
+    mongo.update_record('xlm', 'tasks', {'_id': object_id}, {'$set': {'results.intercept': intercept}})
+    print('intercept estimated for task: ' + task_id)

@@ -1,5 +1,0 @@
-rabbitmq_url: localhost
-username: admin
-password: admin
-port: 5671
-virtual_host: /

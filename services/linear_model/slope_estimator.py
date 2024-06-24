@@ -1,8 +1,10 @@
-from data_manager import mongo
 import json
+from scipy.stats import linregress
 from clients import producer
 from clients import consumer
 from util import util
+from data_manager import mongo
+from bson import ObjectId
 
 
 def callback(ch, method, properties, body):
@@ -23,3 +25,11 @@ consumer_thread.start()
 
 def _estimate_slope(task_id):
     print('estimating slope for task: ' + task_id)
+    object_id = ObjectId(task_id)
+    task = mongo.retrieve_record('xlm', 'tasks', {'_id': object_id})
+    metadata = task['metadata']
+    x = task['data'][metadata['independent_variable']]
+    y = task['data'][metadata['dependent_variable']]
+    slope = linregress(x, y).slope
+    mongo.update_record('xlm', 'tasks', {'_id': object_id}, {'$set': {'results.slope': slope}})
+    print('slope estimated for task: ' + task_id)
