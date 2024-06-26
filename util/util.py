@@ -1,26 +1,19 @@
-from data_manager import mongo
-from bson import ObjectId
-
-
 # gets topic for next step in a learning process
-def get_next_topic(task_id):
-    object_id = ObjectId(task_id)
-    task = mongo.retrieve_record('xlm', 'tasks', {'_id': object_id})
+def get_next_topic(task):
     steps = task['steps']
     sorted_keys = sorted(steps.keys())
     if len(sorted_keys) > 0:
-        step = sorted_keys[0]
         next_topic = steps[sorted_keys[0]]
     else:
-        step = -1
         next_topic = 'learning_finish'
-    return step, next_topic
+    return next_topic
 
 
 # updates the steps of a learning process
-def update_steps_task(task_id, step):
-    object_id = ObjectId(task_id)
-    task = mongo.retrieve_record('xlm', 'tasks', {'_id': object_id})
+def update_steps_task(task):
     if len(task['steps']) > 0:
-        del task['steps'][step]
-        mongo.update_record('xlm', 'tasks', {'_id': object_id}, {'$set': {'steps': task['steps']}})
+        steps = task['steps']
+        sorted_keys = sorted(steps.keys())
+        del steps[sorted_keys[0]]
+        task['steps'] = steps
+    return task

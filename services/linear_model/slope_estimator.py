@@ -7,29 +7,41 @@ from data_manager import mongo
 from bson import ObjectId
 
 
+topic = 'estimate_slope'
+
+
 def callback(ch, method, properties, body):
+    ch.basic_ack(delivery_tag=method.delivery_tag)
     message = json.loads(body)
-    task_id = message['task_id']
-    step, next_topic = util.get_next_topic(task_id)
-    _estimate_slope(task_id)
-    util.update_steps_task(task_id, step)
+    sender = message['from']
+    message_id = message['message_id']
+    object_id = ObjectId(message_id)
+    message = mongo.retrieve_record('xlm', 'messages', {'_id': object_id})
+    task = message['task']
+    task = _estimate_slope(task)
+    task = util.update_steps_task(task)
+    finished = False
+    if len(task['steps']) == 0:
+        finished = True
+    message = {'from': sender, 'to': topic, 'task': task, 'finished': finished}
+    message_id = mongo.store('xlm', 'messages', message)
+    next_topic = util.get_next_topic(task)
+    message = {'message_id': str(message_id), 'task_id': task['task_id'], 'from': topic, 'to': next_topic}
     prod = producer.Producer()
     print("Next topic slope: " + next_topic)
     prod.publish(next_topic, message)
-    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 consumer_thread = consumer.Consumer('estimate_slope', callback)
 consumer_thread.start()
 
 
-def _estimate_slope(task_id):
-    print('estimating slope for task: ' + task_id)
-    object_id = ObjectId(task_id)
-    task = mongo.retrieve_record('xlm', 'tasks', {'_id': object_id})
+def _estimate_slope(task):
+    task_id = task['task_id']
     metadata = task['metadata']
     x = task['data'][metadata['independent_variable']]
     y = task['data'][metadata['dependent_variable']]
     slope = linregress(x, y).slope
-    mongo.update_record('xlm', 'tasks', {'_id': object_id}, {'$set': {'results.slope': slope}})
-    print('slope estimated for task: ' + task_id)
+    task['results']['slope'] = slope
+    print('Slope estimated for task: ' + task_id)
+    return task
