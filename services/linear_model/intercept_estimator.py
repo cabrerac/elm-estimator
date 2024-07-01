@@ -1,10 +1,11 @@
 import json
-from scipy.stats import linregress
+from sklearn.linear_model import LinearRegression
 from clients import producer
 from clients import consumer
 from util import util
 from data_manager import mongo
 from bson import ObjectId
+import numpy
 
 
 topic = 'estimate_intercept'
@@ -32,16 +33,18 @@ def callback(ch, method, properties, body):
     prod.publish(next_topic, message)
 
 
-consumer_thread = consumer.Consumer('estimate_intercept', callback)
+consumer_thread = consumer.Consumer(topic, callback)
 consumer_thread.start()
 
 
 def _estimate_intercept(task):
     task_id = task['task_id']
     metadata = task['metadata']
-    x = task['data'][metadata['independent_variable']]
-    y = task['data'][metadata['dependent_variable']]
-    intercept = linregress(x, y).intercept
-    task['results']['intercept'] = intercept
+    x = numpy.array(task['data'][metadata['independent_variable']]['train']).reshape(-1, 1)
+    y = numpy.array(task['data'][metadata['dependent_variable']]['train']).reshape(-1, 1)
+    model = LinearRegression()
+    model.fit(x, y)
+    intercept = model.intercept_
+    task['results']['intercept'] = intercept.tolist()[0]
     print('Intercept estimated for task: ' + task_id)
     return task

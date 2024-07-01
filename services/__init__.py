@@ -1,6 +1,28 @@
 import os
-
+import logging
+from datetime import datetime
 from flask import Flask
+
+# create and configure logger
+logger = logging.getLogger("logger")
+logger.setLevel(logging.DEBUG)
+
+
+# console log
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)  # set the level for console output
+console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+console_handler.setFormatter(console_formatter)
+# file log
+if not os.path.exists('./logs/'):
+    os.makedirs('./logs/')
+log_file = './logs/xlm_learner_' + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") + '.log'
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.DEBUG)  # set the level for file output
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 
 def create_app(test_config=None):
@@ -33,5 +55,8 @@ def create_app(test_config=None):
 
     from .linear_model import slope_estimator
     from .linear_model import intercept_estimator
+    from .linear_model import predict
+    from .linear_model import mean_squared_error
+    from .linear_model import r_squared
 
     return app

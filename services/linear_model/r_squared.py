@@ -1,14 +1,14 @@
 import json
-from sklearn.linear_model import LinearRegression
 from clients import producer
 from clients import consumer
 from util import util
 from data_manager import mongo
 from bson import ObjectId
-import numpy
+
+from sklearn.metrics import r2_score
 
 
-topic = 'estimate_slope'
+topic = 'evaluate_r2'
 
 
 def callback(ch, method, properties, body):
@@ -19,7 +19,7 @@ def callback(ch, method, properties, body):
     object_id = ObjectId(message_id)
     message = mongo.retrieve_record('xlm', 'messages', {'_id': object_id})
     task = message['task']
-    task = _estimate_slope(task)
+    task = _evaluate(task)
     task = util.update_steps_task(task)
     finished = False
     if len(task['steps']) == 0:
@@ -37,14 +37,11 @@ consumer_thread = consumer.Consumer(topic, callback)
 consumer_thread.start()
 
 
-def _estimate_slope(task):
+def _evaluate(task):
     task_id = task['task_id']
-    metadata = task['metadata']
-    x = numpy.array(task['data'][metadata['independent_variable']]['train']).reshape(-1, 1)
-    y = numpy.array(task['data'][metadata['dependent_variable']]['train']).reshape(-1, 1)
-    model = LinearRegression()
-    model.fit(x, y)
-    slope = model.coef_
-    task['results']['slope'] = slope.tolist()[0][0]
-    print('Slope estimated for task: ' + task_id)
+    y_test = task['data']['y']['test']
+    y_pred = task['results']['y_pred']
+    r2 = r2_score(y_test, y_pred)
+    task['results']['r2_score'] = r2
+    print('R-squared calculated for task: ' + task_id)
     return task

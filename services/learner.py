@@ -27,7 +27,7 @@ bp = Blueprint('learner', __name__, url_prefix='')
 def learn():
     task = request.get_json()
     task['results'] = {}
-    message = {'from': 'client', 'to': topic, 'task': task, 'finished': False}
+    message = {'from': 'client', 'to': 'learning_start', 'task': task, 'finished': False}
     message_id = mongo.store('xlm', 'messages', message)
     task_id = task['task_id']
     next_topic = util.get_next_topic(task)
