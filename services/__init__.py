@@ -55,8 +55,10 @@ def create_app(test_config=None):
 
     from .linear_model import slope_estimator
     from .linear_model import intercept_estimator
-    from .linear_model import predict
-    from .linear_model import mean_squared_error
-    from .linear_model import r_squared
+    from .linear_model import predictions_estimator
+    from .linear_model import residuals_calculator
+    from .linear_model import deviations_calculator
+    from .linear_model import mse_calculator
+    from .linear_model import rs_calculator
 
     return app

@@ -6,7 +6,7 @@ from data_manager import mongo
 from bson import ObjectId
 
 
-topic = 'evaluate_mse'
+topic = 'evaluate_r2'
 
 
 def callback(ch, method, properties, body):
@@ -27,7 +27,7 @@ def callback(ch, method, properties, body):
     next_topic = util.get_next_topic(task)
     message = {'message_id': str(message_id), 'task_id': task['task_id'], 'from': topic, 'to': next_topic}
     prod = producer.Producer()
-    print("Next topic slope: " + next_topic)
+    print("next step: " + next_topic)
     prod.publish(next_topic, message)
 
 
@@ -37,18 +37,16 @@ consumer_thread.start()
 
 def _evaluate(task):
     task_id = task['task_id']
-    y_test = task['data']['y']['test']
-    y_pred = task['results']['y_pred']
-    residuals = []
-    mse = 0.0
+    residuals = task['results']['residuals']
+    deviations = task['results']['deviations']
+    ssr = 0
+    sst = 0
     i = 0
-    while i < len(y_test):
-        residual = y_test[i] - y_pred[i]
-        mse = mse + (residual*residual)
-        residuals.append(residual*residual)
+    while i < len(residuals):
+        ssr = ssr + (residuals[i] * residuals[i])
+        sst = sst + (deviations[i] * deviations[i])
         i = i + 1
-    mse = mse/len(y_test)
-    task['results']['residuals'] = residuals
-    task['results']['mse'] = mse
-    print('MSE calculated for task: ' + task_id)
+    r2 = 1 - (ssr / sst)
+    task['results']['r2_score'] = r2
+    print('[>] R-squared calculated for task: ' + task_id)
     return task

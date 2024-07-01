@@ -14,5 +14,4 @@ class Consumer(threading.Thread):
         threading.Thread(target=self.channel.basic_consume(queue=self.queue_name, on_message_callback=callback), daemon=True)
     
     def run(self):
-        print('[*] waiting for messages at queue: ' + self.queue_name + '...')
         self.channel.start_consuming()

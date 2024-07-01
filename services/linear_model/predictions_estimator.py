@@ -6,7 +6,7 @@ from data_manager import mongo
 from bson import ObjectId
 
 
-topic = 'estimate_intercept'
+topic = 'estimate_predictions'
 
 
 def callback(ch, method, properties, body):
@@ -17,7 +17,7 @@ def callback(ch, method, properties, body):
     object_id = ObjectId(message_id)
     message = mongo.retrieve_record('xlm', 'messages', {'_id': object_id})
     task = message['task']
-    task = _estimate_intercept(task)
+    task = _predict(task)
     task = util.update_steps_task(task)
     finished = False
     if len(task['steps']) == 0:
@@ -35,15 +35,15 @@ consumer_thread = consumer.Consumer(topic, callback)
 consumer_thread.start()
 
 
-def _estimate_intercept(task):
+def _predict(task):
     task_id = task['task_id']
-    metadata = task['metadata']
-    x = task['data'][metadata['independent_variable']]['train']
-    y = task['data'][metadata['dependent_variable']]['train']
     slope = task['results']['slope']
-    x_mean = sum(x) / len(x)
-    y_mean = sum(y) / len(y)
-    intercept = y_mean - (slope * x_mean)
-    task['results']['intercept'] = intercept
-    print('[>] Intercept estimated for task: ' + task_id)
+    intercept = task['results']['intercept']
+    x_test = task['data']['x']['test']
+    y_predicted = []
+    for x in x_test:
+        y = (slope * x) + intercept
+        y_predicted.append(y)
+    task['results']['y_predicted'] = y_predicted
+    print('[>] Predictions estimated for task: ' + task_id)
     return task
